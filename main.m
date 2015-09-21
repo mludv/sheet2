@@ -28,8 +28,8 @@ while (length(c_cand) ~= length(c))
     my = randperm(length(b));
 end
 
-tmax = 100000;
-beta = linspace(0,5,tmax);
+tmax = 20000;
+beta = 0.0001*(1:tmax);
 H = zeros(tmax+1,1);
 H(1) = EnergyFunction(getC(a(sigma),b(my)));
 %
@@ -53,7 +53,7 @@ for i= 1:tmax
     end
     
     % calculate c
-    c_cand = CBuilder(a(tmp_sigma), b(tmp_my));
+    c_cand = getC(a(tmp_sigma), b(tmp_my));
     
     % check so c has the correct length
     if (length(c_cand) ~= length(c)) 
@@ -75,8 +75,11 @@ for i= 1:tmax
         H(i+1)=H(i);
     end
 end
-
-
+%%
+H(end)
+plot((1:length(H)), H);
+xlim([0, tmax])
+ylim([0 100])
 %% data1
 %a=[8479, 4868, 3696, 2646, 169, 142];
 %b=[11968, 5026, 1081, 1050, 691, 184];
