@@ -18,6 +18,6 @@ c(1) = c_coord(1);
 for i=2:length(c_coord)
     c(i) = c_coord(i) - c_coord(i-1);
 end
-
+c = sort(c,'descend');
 end
 

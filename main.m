@@ -2,40 +2,44 @@
 a = [2, 9, 3];
 b = [7, 1, 4, 2];
 expected = [2, 5, 1, 3, 1, 2];
-assert(all(getC(a,b) == expected));
+assert(all(getC(a,b) == sort(expected,'descend')));
 %%
 
 
 a=[8479, 4868, 3696, 2646, 169, 142];
 b=[11968, 5026, 1081, 1050, 691, 184];
+c=[8479, 4167, 2646, 1081, 881, 859, 701, 691, 184, 169, 142];
 
 % energy function
-c_real = sort(expected);
-EnergyFunction = @(x) sum((c_real-x).^2./c_real);
+EnergyFunction = @(x) sum((c-x).^2./c);
 
-% probability function
+% probability function[
 ProbFunction = @(deltaH, beta) exp(-beta*deltaH);
 
 % initialize with random permutation
 sigma = randperm(length(a));
 my = randperm(length(b));
 
+c_cand = getC(a(sigma), b(my));
+
 % make sure that we have the same number of elements as in c
-while (length(getC(a(sigma), b(my))) ~= length(c_real)) 
+while (length(c_cand) ~= length(c)) 
     sigma =  randperm(length(a));
     my = randperm(length(b));
 end
 
+tmax = 100000;
+beta = linspace(0,5,tmax);
+H = zeros(tmax+1,1);
+H(1) = EnergyFunction(getC(a(sigma),b(my)));
 %
-beta = linspace(0,1,100000);
-H = EnergyFunction(sort(getC(a(sigma),b(my))));
 %
-for i= 1:length(beta)
+for i= 1:tmax
     tmp_my = my;
     tmp_sigma = sigma;
     
     % Check if we already found the minimum
-    if (H == 0)
+    if (H(i) == 0)
         break;
     end
     
@@ -49,22 +53,26 @@ for i= 1:length(beta)
     end
     
     % calculate c
-    c = getC(a(tmp_sigma), b(tmp_my));
+    c_cand = CBuilder(a(tmp_sigma), b(tmp_my));
     
     % check so c has the correct length
-    if (length(c) ~= length(c_real)) 
+    if (length(c_cand) ~= length(c)) 
+        H(i+1) = H(i);
         continue;
     end
     
     % calculate next energy
-    Hnext = EnergyFunction(c);
+    Hnext = EnergyFunction(c_cand);
     
     
     % check if we accept the move
-    if (Hnext < H || rand < ProbFunction(Hnext - H, beta(i)))
-        H = Hnext
+    probAccept = exp(-(Hnext - H(i))*beta(i));
+    if (Hnext < H(i) || rand < probAccept)
+        H(i+1) = Hnext;
         sigma = tmp_sigma;
         my = tmp_my;
+    else
+        H(i+1)=H(i);
     end
 end
 
