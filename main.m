@@ -35,6 +35,9 @@ l = length(beta);
 plot(1:l, H(index(1),:), 1:l, H(index(2),:), 1:l, H(index(3),:));
 H(index,end)
 
+title('The current energy')
+xlabel('Time step')
+ylabel('Energy')
 %% When the algorithm find H=0
 algoStop = zeros(runs, 1);
 for i=1:runs
@@ -62,14 +65,59 @@ c=[7042, 5608, 5464, 4371, 3884, 3121, 1901, 1768, 1590, 959, 899, 707, 702, 510
 alpha = 5*10^(-5);
 beta = alpha*(1:200000);
 
-tic
-runs = 1;
+runs = 550;
 success = zeros(runs, 1);
 H = zeros(runs, length(beta));
 sigma = zeros(runs, length(a));
 mu = zeros(runs, length(b));
+tic
 for i = 1:runs
     [H(i,:), sigma(i,:), mu(i,:)] = runMetropolis(a, b, c, beta);
+    if all(c == getC(a(sigma(i,:)), b(mu(i,:))))
+        success(i) = 1;
+    end
+end
+toc
+
+sum(success)
+
+%% run data2 with feedback 
+
+alpha = 10^(-6);
+beta = alpha*(1:200000);
+
+runs = 6;
+success = zeros(runs, 1);
+H = zeros(runs, length(beta));
+sigma = zeros(runs, length(a));
+mu = zeros(runs, length(b));
+
+% create initial state
+state_sigma = randperm(length(a));
+state_mu = randperm(length(b));
+c_cand = getC(a(state_sigma), b(state_mu));
+% make sure that we have the same number of elements as in c
+while (length(c_cand) ~= length(c)) 
+    state_sigma =  randperm(length(a));
+    state_mu = randperm(length(b));
+end
+
+% run the algorithm
+bestH = inf;
+
+tic
+for i = 1:runs
+    [H(i,:), sigma(i,:), mu(i,:), newBestH, new_state_sigma, new_state_mu] ...
+        = runMetropolis_startState(a, b, c, beta, state_sigma, state_mu);
+    
+    % check if we found a new best energy, if that is the case, feed it to 
+    % the next iteration
+    if (newBestH < bestH)
+        state_sigma = new_state_sigma;
+        state_mu = new_state_mu;
+        bestH = newBestH;
+    end
+    
     if all(c == getC(a(sigma(i,:)), b(mu(i,:))))
         success(i) = 1;
     end
