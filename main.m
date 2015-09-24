@@ -48,14 +48,20 @@ end
 mean(algoStop(algoStop ~= 0))
 
 %% Make bar plots
-index = 16;
-aStack = a(sigma(index,:));
-bStack = b(mu(index,:));
+index = [16, 29, 23];
+for i = 1:3
+aStack = a(sigma(index(i),:));
+bStack = b(mu(index(i),:));
 aStack = [aStack zeros(1, (length(c)-length(a)))];
 bStack = [bStack zeros(1, (length(c)-length(b)))];
 cStack = getC_unsorted(aStack, bStack);
+subplot(1,3,i);
 bar([aStack; cStack; bStack], 'stacked')
-
+set(gca, 'XTickLabel', {'a', 'c','b'})
+ylabel('Distance from edge')
+xlabel('Fragment array')
+title('H=0')
+end
 %% run data2
 a=[9979, 9348, 8022, 4020, 2693, 1892, 1714, 1371, 510, 451];
 b=[9492, 8453, 7749, 7365, 2292, 2180, 1023, 959, 278, 124, 85];
